@@ -23,62 +23,28 @@ services:
        networks:
            - cdc-using-debezium-network
 
-   cdc-using-debezium-kafka:
-       image: bitnami/kafka:3.4
-       container_name: cdc-using-debezium-kafka
-       hostname: cdc-using-debezium-kafka
+   db-mysql:
+       image: mysql:8.0
+       container_name: db-mysql
+       hostname: db-mysql
        restart: always
        ports:
-           - '9092:9092'
+           - '3306:3306'
        environment:
-           KAFKA_CFG_NODE_ID: 1
-           KAFKA_KRAFT_CLUSTER_ID: q0k00yjQRaqWmAAAZv955w # base64 UUID
-           KAFKA_CFG_PROCESS_ROLES: controller,broker
-           KAFKA_CFG_LISTENERS: INTERNAL://cdc-using-debezium-kafka:29092,CONTROLLER://cdc-using-debezium-kafka:29093,EXTERNAL://0.0.0.0:9092
-           KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://cdc-using-debezium-kafka:29092,EXTERNAL://localhost:9092
-           KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-           KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@cdc-using-debezium-kafka:29093
-           KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
-           KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-       networks:
-           - cdc-using-debezium-network
-
-   cdc-using-debezium-connect:
-       image: debezium/connect:2.3
-       container_name: cdc-using-debezium-connect
-       hostname: cdc-using-debezium-connect
-       restart: always
-       ports:
-           - '8083:8083'
-       environment:
-           BOOTSTRAP_SERVERS: cdc-using-debezium-kafka:29092
-           GROUP_ID: 1
-           CONFIG_STORAGE_TOPIC: my_connect_configs
-           OFFSET_STORAGE_TOPIC: my_connect_offsets
-           STATUS_STORAGE_TOPIC: my_connect_statuses
-           ENABLE_DEBEZIUM_SCRIPTING: 'true'
-       links:
-           - cdc-using-debezium-kafka
-           - cdc-using-debezium-postgres
-       networks:
-           - cdc-using-debezium-network
-
-   confluent-control-center:
-       image: confluentinc/cp-enterprise-control-center:latest
-       container_name: confluent-control-center
-       hostname: confluent-control-center
-       restart: always
-       ports:
-           - '9021:9021'
-       environment:
-           CONTROL_CENTER_BOOTSTRAP_SERVERS: cdc-using-debezium-kafka:29092
-           CONTROL_CENTER_ZOOKEEPER: cdc-using-debezium-kafka:2181
-           CONTROL_CENTER_REPLICATION_FACTOR: 1
-           CONTROL_CENTER_PORT: 9021
+           MYSQL_ROOT_PASSWORD: 12345678
+           MYSQL_DATABASE: db-mysql
+           MYSQL_PORT: 3306
+           MYSQL_USER: my-sql
+           MYSQL_PASSWORD: 'postgres' 
+       volumes:
+           - 'db-mysql-data:/var/lib/mysql'
        networks:
            - cdc-using-debezium-network
 
 volumes:
    cdc-using-debezium-postgres-data:
        name: cdc-using-debezium-postgres-data
+       driver: local
+   db-mysql-data:
+       name: db-mysql-data
        driver: local
