@@ -50,3 +50,17 @@ curl --location 'http://localhost:8083/connectors' \
 
 Após iniciar todos os contêineres, você pode acessar o Confluent Control Center em:
 http://localhost:9021
+
+
+
+
+
+
+
+
+
+##DEV Atalhos
+
+docker exec -it cdc-using-debezium-postgres bash
+psql -U postgres -d cdc-using-debezium
+INSERT INTO clientes (nome, email) VALUES ('valor1', 'valor2');

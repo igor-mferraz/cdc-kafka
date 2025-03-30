@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import AppDataSource from 'typeorm.config';
+import { KafkaConsumerController } from './kafka/kafka.controller';
 
 
 @Module({
@@ -12,7 +13,7 @@ import AppDataSource from 'typeorm.config';
     UsersModule,
   ],
 
-  controllers: [AppController],
+  controllers: [AppController, KafkaConsumerController],
   providers: [AppService]
 })
 export class AppModule {}
