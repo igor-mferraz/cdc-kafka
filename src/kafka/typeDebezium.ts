@@ -31,7 +31,7 @@ export interface DebeziumEnvelope<T> {
   
 
   export enum OperationType {
-    c = 'CREATE',
-    u = 'UPDATE',
-    d = 'DELETE',
+    CREATE = 'c',
+    UPDATE = 'u',
+    DELETE = 'd',
 }
