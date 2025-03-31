@@ -31,12 +31,22 @@ export class UsersService {
     return this.userRepository.findOne({ where: { ref_id: ref_id } });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const user = this.userRepository.findOne({ where: { id: id } });
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOne({ where: { id: id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return this.userRepository.save({ ...user, ...updateUserDto });
+    await this.userRepository.update(id, updateUserDto);
+    return;
+  }
+
+  async delete(id: number) {
+    const user = await this.userRepository.findOne({ where: { id: id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userRepository.delete(id);
+    return;
   }
 
   remove(id: number) {
