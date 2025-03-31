@@ -37,6 +37,24 @@ curl --location 'http://localhost:8083/connectors' \
 }'
 ```
 
+
+
+### para atualizar as tabelas monitoradas
+curl -X PUT http://localhost:8083/connectors/cdc-using-debezium-connector/config \
+     -H "Accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+           "database.hostname": "###.###.#.###",
+           "database.port": "5443",
+           "database.user": "postgres",
+           "database.password": "123",
+           "database.dbname": "cdc-using-debezium",
+           "database.server.id": "184054",
+           "table.include.list": "public.clientes,public.enderecos",
+           "topic.prefix": "cdc-using-debezium-topic"
+         }'
+
 ## Inserindo Dados e Verificando Mensagens no Kafka
 
 1. **Inserir um Registro**:

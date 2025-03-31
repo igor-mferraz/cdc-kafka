@@ -12,7 +12,6 @@ import { KafkaModule } from './kafka/kafka.module';
     UsersModule,
     KafkaModule,
   ],
-
   controllers: [AppController],
   providers: [AppService]
 })
