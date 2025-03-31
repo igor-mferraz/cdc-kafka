@@ -11,6 +11,9 @@ export class User {
     @Column({ unique: true })
     email: string;
 
+    @Column() 
+    ref_id: number;
+
     @CreateDateColumn()
     data_criacao: Date;
 }

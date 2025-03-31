@@ -97,6 +97,7 @@ services:
       - cdc-using-debezium-network
 
 volumes:
+  db-mysql-data:
   cdc-using-debezium-postgres-data:
     name: cdc-using-debezium-postgres-data
     driver: local
