@@ -7,7 +7,7 @@ networks:
 
 services:
   oracle-source:
-    image: gvenzl/oracle-xe:21-slim # Imagem Oracle XE (versão gratuita para testes)
+    image: gvenzl/oracle-xe:21-slim
     container_name: oracle-source
     hostname: oracle-source
     restart: always
@@ -21,7 +21,7 @@ services:
       - cdc-using-debezium-network
 
   oracle-destination:
-    image: gvenzl/oracle-xe:21-slim
+    image: gvenzl/oracle-xe:21-slim    
     container_name: oracle-destination
     hostname: oracle-destination
     restart: always
@@ -74,6 +74,24 @@ services:
     networks:
       - cdc-using-debezium-network
 
+  mysql-nest:
+    image: mysql:8.0
+    container_name: mysql-nest
+    hostname: mysql-nest
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: nest_db
+      MYSQL_USER: nest_user
+      MYSQL_PASSWORD: nest_pass
+    volumes:
+      - "mysql-nest-data:/var/lib/mysql"
+    networks:
+      - cdc-using-debezium-network
+
 volumes:
   oracle-source-data:
   oracle-destination-data:
+  mysql-nest-data:

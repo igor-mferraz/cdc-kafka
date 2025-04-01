@@ -82,3 +82,46 @@ http://localhost:9021
 docker exec -it cdc-using-debezium-postgres bash
 psql -U postgres -d cdc-using-debezium
 INSERT INTO clientes (nome, email) VALUES ('valor1', 'valor2');
+
+
+
+
+
+
+### oracle deve estar com o mode ARCHIVELOG ATIVO
+referencias
+https://drive.google.com/drive/folders/1M0MiZOdq6ZNXvn375KpahbN86ChrpuIu
+https://hevodata.com/learn/debezium-connector-for-oracle/
+
+
+### o conainer do conector deve ter o plugin do oracle ojdbc8.jar referente a sua versao do banco
+
+
+####
+Para ver os connector 
+GET - http://localhost:8083/connectors
+
+
+
+Para conectar no debezium
+POST - http://localhost:8083/connectors
+{
+  "name": "oracle-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.oracle.OracleConnector",
+    "tasks.max": "1",
+    "database.hostname": "oracle-source",
+    "database.port": "1521",
+    "database.user": "DEBEZIUM_USER",
+    "database.password": "Debezium123",
+    "database.dbname": "XE",
+    "database.pdb.name": "XEPDB1", 
+    "database.out.server.name": "dbz_oracle_source",
+    "database.connection.adapter": "logminer",
+    "database.history.kafka.bootstrap.servers": "cdc-using-debezium-kafka:29092",
+    "database.history.kafka.topic": "schema-changes.oracle",
+    "table.include.list": "SYSTEM.CLIENTES",
+    "database.tablename.case.insensitive": "false",
+    "topic.prefix": "oracle-source-cdc"
+  }
+}

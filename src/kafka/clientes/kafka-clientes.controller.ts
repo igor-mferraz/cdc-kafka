@@ -8,9 +8,10 @@ export class KafkaConsumerController {
 
   constructor(private readonly clienteKafkaService: ClienteKafkaService) {}
 
-  @MessagePattern('cdc-using-debezium-topic.public.clientes')
+  @MessagePattern('oracle-source-cdc.system.clientes')
   handleMessage(data: DebeziumEnvelope<any>) {
-    this.clienteKafkaService.processMessage(data); 
+    console.log('data', data);
+    this.clienteKafkaService.processMessage(data);
   }
   
 }
