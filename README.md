@@ -1,22 +1,28 @@
-Documentação: Configuração de CDC com Debezium e Oracle
 
-1. Objetivo
-Configurar o Debezium para capturar mudanças (Change Data Capture - CDC) na tabela SYSTEM.CLIENTES de um banco de dados Oracle 21c, usando Kafka e Kafka Connect, em um ambiente Docker.
+# Configuração de CDC com Debezium e Oracle
 
-2. Ambiente
-- Sistema Operacional: WSL (Windows Subsystem for Linux) no Windows.
-- Docker Compose: Usado para orquestrar os containers.
-- Componentes:
-  - Oracle: gvenzl/oracle-xe:21-slim (Oracle 21c Express Edition).
-  - Kafka: bitnami/kafka:3.4.
-  - Debezium Kafka Connect: debezium/connect:2.3.
-  - Tabela alvo: SYSTEM.CLIENTES.
+## 1. Objetivo
 
-3. Passos Realizados
+Configurar o Debezium para capturar mudanças (Change Data Capture - CDC) na tabela `SYSTEM.CLIENTES` de um banco de dados Oracle 21c, usando Kafka e Kafka Connect, em um ambiente Docker.
 
-3.1. Configuração do Ambiente com Docker Compose
-Um arquivo docker-compose.yml foi usado para subir os serviços necessários:
+---
 
+## 2. Ambiente
+
+- **Docker Compose:**
+- **Componentes:**
+  - Oracle: `gvenzl/oracle-xe:21-slim`
+  - Kafka: `bitnami/kafka:3.4`
+  - Debezium Kafka Connect: `debezium/connect:2.3`
+  - Tabela alvo: `SYSTEM.CLIENTES`
+
+---
+
+## 3. Passos Realizados
+
+### 3.1. Configuração do Ambiente com Docker Compose
+
+```yaml
 version: '3.7'
 
 networks:
@@ -96,91 +102,123 @@ services:
 volumes:
   oracle-source-data:
   oracle-destination-data:
+```
 
-Comando para subir os serviços
-docker-compose up -d 
+**Comando para subir os serviços:**
 
-3.2. Configuração do Banco Oracle
-- Criar o usuário DEBEZIUM_USER:
-  docker exec -it oracle-source sqlplus / as sysdba
-  SQL> CREATE USER DEBEZIUM_USER IDENTIFIED BY "Debezium123";
-  SQL> GRANT CONNECT, RESOURCE TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ANY TABLE TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ON V_$DATABASE TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ON V_$LOG TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ON V_$LOGFILE TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ON V_$ARCHIVED_LOG TO DEBEZIUM_USER;
-  SQL> GRANT SELECT ON V_$LOGMNR_CONTENTS TO DEBEZIUM_USER;
-  SQL> GRANT EXECUTE ON DBMS_LOGMNR TO DEBEZIUM_USER;
-  SQL> GRANT LOGMINING TO DEBEZIUM_USER;
-  SQL> ALTER USER DEBEZIUM_USER QUOTA UNLIMITED ON USERS;
+```bash
+docker-compose up -d
+```
 
-- Habilitar ARCHIVELOG e suplemento de log:
-  SQL> SHUTDOWN IMMEDIATE;
-  SQL> STARTUP MOUNT;
-  SQL> ALTER DATABASE ARCHIVELOG;
-  SQL> ALTER DATABASE OPEN;
-  SQL> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
-  SQL> ALTER TABLE SYSTEM.CLIENTES ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+---
 
-3.3. Adicionar o Driver JDBC ao Debezium
-A imagem debezium/connect:2.3 não inclui o driver JDBC da Oracle. Foi necessário adicionar manualmente:
-- Baixar o ojdbc8.jar (para Oracle 21c, compatível com JDK 8) do site da Oracle.
-- Copiar o arquivo para o container:
-  cp /mnt/c/Users/igorm/Downloads/ojdbc8.jar /home/igor/
-  docker cp /home/igor/ojdbc8.jar cdc-using-debezium-connect:/kafka/libs/
-- Reiniciar o container:
-  docker restart cdc-using-debezium-connect
+### 3.2. Configuração do Banco Oracle
 
-3.4. Registrar o Conector no Debezium
-Um conector foi configurado para capturar mudanças da tabela SYSTEM.CLIENTES:
-- JSON usado (enviado via Postman):
+**Acessar o container do Oracle:**
+
+```bash
+docker exec -it oracle-source sqlplus / as sysdba
+```
+
+**Criar usuário DEBEZIUM_USER e conceder permissões:**
+
+```sql
+CREATE USER DEBEZIUM_USER IDENTIFIED BY "Debezium123";
+GRANT CONNECT, RESOURCE TO DEBEZIUM_USER;
+GRANT SELECT ANY TABLE TO DEBEZIUM_USER;
+GRANT SELECT ON V_$DATABASE TO DEBEZIUM_USER;
+GRANT SELECT ON V_$LOG TO DEBEZIUM_USER;
+GRANT SELECT ON V_$LOGFILE TO DEBEZIUM_USER;
+GRANT SELECT ON V_$ARCHIVED_LOG TO DEBEZIUM_USER;
+GRANT SELECT ON V_$LOGMNR_CONTENTS TO DEBEZIUM_USER;
+GRANT EXECUTE ON DBMS_LOGMNR TO DEBEZIUM_USER;
+GRANT LOGMINING TO DEBEZIUM_USER;
+ALTER USER DEBEZIUM_USER QUOTA UNLIMITED ON USERS;
+```
+
+**Habilitar ARCHIVELOG e SUPPLEMENTAL LOG:**
+
+```sql
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE ARCHIVELOG;
+ALTER DATABASE OPEN;
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+ALTER TABLE SYSTEM.CLIENTES ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+```
+
+---
+
+### 3.3. Adicionar o Driver JDBC ao Debezium
+
+```bash
+cp /mnt/c/Users/igorm/Downloads/ojdbc8.jar /home/igor/
+docker cp /home/igor/ojdbc8.jar cdc-using-debezium-connect:/kafka/libs/
+docker restart cdc-using-debezium-connect
+```
+
+---
+
+### 3.4. Registrar o Conector no Debezium
+
+```json
 {
-    "name": "oracle-connector",
-    "config": {
-        "connector.class": "io.debezium.connector.oracle.OracleConnector",
-        "tasks.max": "1",
-        "database.hostname": "oracle-source",
-        "database.port": "1521",
-        "database.user": "DEBEZIUM_USER",
-        "database.password": "Debezium123",
-        "database.dbname": "XE",
-        "database.pdb.name": "XEPDB1",
-        "database.out.server.name": "dbz_oracle_source",
-        "database.connection.adapter": "logminer",
-        "database.history.kafka.bootstrap.servers": "cdc-using-debezium-kafka:29092",
-        "database.history.kafka.topic": "schema-changes.oracle",
-        "table.include.list": "SYSTEM.CLIENTES",
-        "database.tablename.case.insensitive": "false",
-        "topic.prefix": "oracle-source-cdc"
-    }
+  "name": "oracle-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.oracle.OracleConnector",
+    "tasks.max": "1",
+    "database.hostname": "oracle-source",
+    "database.port": "1521",
+    "database.user": "DEBEZIUM_USER",
+    "database.password": "Debezium123",
+    "database.dbname": "XE",
+    "database.pdb.name": "XEPDB1",
+    "database.out.server.name": "dbz_oracle_source",
+    "database.connection.adapter": "logminer",
+    "database.history.kafka.bootstrap.servers": "cdc-using-debezium-kafka:29092",
+    "database.history.kafka.topic": "schema-changes.oracle",
+    "table.include.list": "SYSTEM.CLIENTES",
+    "database.tablename.case.insensitive": "false",
+    "topic.prefix": "oracle-source-cdc"
+  }
 }
+```
 
-- Requisição no Postman:
-  Método: POST
-  URL: http://localhost:8083/connectors
-  Header: Content-Type: application/json
-  Body: (JSON acima)
+- Método: POST  
+- URL: http://localhost:8083/connectors  
+- Header: Content-Type: application/json  
+- Body: JSON acima
 
-- Resposta recebida:
-{
-    "name": "oracle-connector",
-    "config": {...},
-    "tasks": [],
-    "type": "source"
-}
+---
 
-4. Resultado
-O conector foi registrado com sucesso. O Debezium está pronto para capturar mudanças na tabela SYSTEM.CLIENTES e publicá-las no tópico Kafka oracle-source-cdc.SYSTEM.CLIENTES.
+## 4. Resultado
 
-5. Próximos Passos
-- Verificar o status do conector:
-  GET http://localhost:8083/connectors/oracle-connector/status
-- Testar a captura de mudanças:
-  - Inserir dados na tabela:
-    docker exec -it oracle-source sqlplus / as sysdba
-    SQL> ALTER SESSION SET CONTAINER=XEPDB1;
-    SQL> INSERT INTO SYSTEM.CLIENTES (ID, NOME) VALUES (1, 'Teste CDC');
-    SQL> COMMIT;
-  - Consumir o tópico Kafka:
-    docker exec -it cdc-using-debezium-kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic oracle-source-cdc.SYSTEM.CLIENTES --from-beginning
+Conector registrado com sucesso. O Debezium está pronto para capturar mudanças da tabela `SYSTEM.CLIENTES` e publicar no tópico Kafka `oracle-source-cdc.SYSTEM.CLIENTES`.
+
+---
+
+## 5. Próximos Passos
+
+### Verificar status do conector
+
+```bash
+curl http://localhost:8083/connectors/oracle-connector/status
+```
+
+### Inserir dados para teste
+
+```bash
+docker exec -it oracle-source sqlplus / as sysdba
+```
+
+```sql
+ALTER SESSION SET CONTAINER=XEPDB1;
+INSERT INTO SYSTEM.CLIENTES (ID, NOME) VALUES (1, 'Teste CDC');
+COMMIT;
+```
+
+### Consumir mensagens do tópico Kafka
+
+```bash
+docker exec -it cdc-using-debezium-kafka kafka-console-consumer   --bootstrap-server localhost:9092   --topic oracle-source-cdc.SYSTEM.CLIENTES   --from-beginning
+```
