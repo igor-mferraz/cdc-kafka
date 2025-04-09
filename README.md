@@ -5,8 +5,8 @@
 No `docker-compose.yml` usamos os seguintes serviços:
 
 - `oracle-source`: roda o Oracle XE para fazer CDC.
-- `oracle-destination`: outro Oracle XE (não essencial, mas estava no compose).
-- `cdc-using-debezium-kafka`: Kafka usando a imagem Bitnami (modo KRaft).
+- `oracle-destination`: outro Oracle XE.
+- `cdc-using-debezium-kafka`: Kafka usando a imagem Bitnami.
 - `cdc-using-debezium-connect`: Debezium Connect, responsável por capturar dados do Oracle e publicar no Kafka.
 - `confluent-control-center`: UI de gerenciamento da Confluent que tenta se conectar ao nosso Kafka em KRaft.
 
@@ -15,7 +15,7 @@ No `docker-compose.yml` usamos os seguintes serviços:
 ## 2. Banco Oracle e LogMiner
 
 ### Versão do Oracle
-- **Oracle 19c XE**
+- **Oracle XE**
 
 ### Habilitar Archive Log e Supplemental Logging
 ```sql
