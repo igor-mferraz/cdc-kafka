@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { KafkaClientesModule } from './clientes/kafka-clientes.module';// import { KafkaService } from './kafka.service';
 import { UsersModule } from 'src/users/users.module';
+import { KafkaAddressModule } from './address/address.module';
 @Module({
   imports: [
     ClientsModule.register([
@@ -16,6 +17,7 @@ import { UsersModule } from 'src/users/users.module';
       },
     ]),
     KafkaClientesModule,
+    KafkaAddressModule,
     UsersModule,
   ],
 })

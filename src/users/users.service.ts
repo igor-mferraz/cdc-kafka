@@ -28,7 +28,13 @@ export class UsersService {
   }
 
   getByRefId(ref_id: number) {
-    return this.userRepository.findOne({ where: { ref_id: ref_id } });
+    try{
+      return this.userRepository.findOne({ where: { ref_id: ref_id } });
+    }
+    catch (error) {
+      console.log('Erro ao buscar usuario por ref_id');
+      console.log(error);
+    }
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
