@@ -18,7 +18,7 @@ import { KafkaAddressModule } from './address/address.module';
     ]),
     KafkaClientesModule,
     KafkaAddressModule,
-    UsersModule,
+    UsersModule
   ],
 })
 export class KafkaModule {}
